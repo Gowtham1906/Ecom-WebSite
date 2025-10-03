@@ -5,16 +5,24 @@ import Cart from "./components/Cart";
 
 function App() {
   const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    // Load cart from localStorage on app start
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
 
   useEffect(() => {
     axios
-      .get("/api/products") // works on Azure backend
+      .get("/api/products") // Azure backend endpoint
       .then((res) => setProducts(res.data))
       .catch((err) => console.log(err));
   }, []);
 
-  // Add product with quantity support
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
+
   const addToCart = (product) => {
     const existingItem = cart.find((item) => item.Id === product.Id);
     if (existingItem) {
@@ -30,7 +38,6 @@ function App() {
     }
   };
 
-  // Remove product or decrease quantity
   const removeFromCart = (product) => {
     const existingItem = cart.find((item) => item.Id === product.Id);
     if (existingItem.quantity === 1) {
@@ -46,7 +53,6 @@ function App() {
     }
   };
 
-  // Clear all items from cart
   const clearCart = () => {
     setCart([]);
   };
