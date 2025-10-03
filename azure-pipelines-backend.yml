@@ -1,0 +1,35 @@
+trigger:
+  branches:
+    include:
+      - main  # or your branch name
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '18.x'
+  displayName: Install Node
+
+- script: |
+    cd backend
+    npm install
+  displayName: 'Install backend dependencies'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: 'backend'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/backend.zip'
+    replaceExistingArchive: true
+
+- publish: '$(Build.ArtifactStagingDirectory)/backend.zip'
+  artifact: drop
+
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: '<AzureServiceConnectionName>'  # You'll set this up in next step
+    appName: 'ecomwebapp'             # Your Azure App Service name
+    package: '$(Build.ArtifactStagingDirectory)/backend.zip'
