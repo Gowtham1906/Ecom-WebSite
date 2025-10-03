@@ -3,8 +3,8 @@ import axios from "axios";
 import ProductList from "./components/ProductList";
 import Cart from "./components/Cart";
 
-// Use environment variable in production, fallback to local in dev
-const API_BASE = process.env.REACT_APP_API_BASE || "";
+// Use environment variable or fallback
+const API_BASE = process.env.REACT_APP_API_BASE || "https://ecomwebapp-ekadftebaebna0fz.centralindia-01.azurewebsites.net";
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -12,8 +12,12 @@ function App() {
 
   useEffect(() => {
     axios.get(`${API_BASE}/api/products`)
-      .then(res => setProducts(res.data))
-      .catch(err => console.error("Error fetching products:", err));
+      .then(res => {
+        setProducts(res.data);
+      })
+      .catch(err => {
+        console.error("Error fetching products:", err);
+      });
   }, []);
 
   const addToCart = (product) => {
