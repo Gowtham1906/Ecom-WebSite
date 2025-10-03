@@ -68,7 +68,7 @@ function App() {
   return (
     <Router>
       <div style={{ padding: "20px" }}>
-        <h1>🛍 Simple E-Commerce Store</h1>
+        <h1>🛍 Welcome to E-Commerce Store</h1>
         <Navbar token={token} handleLogout={handleLogout} />
 
         <Routes>
