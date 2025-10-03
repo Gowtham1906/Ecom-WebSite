@@ -5,7 +5,8 @@ import sql from 'mssql';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 dotenv.config();
 
 const app = express();
@@ -22,6 +23,81 @@ const config = {
 };
 
 // --- API Routes ---
+
+// -------------------- AUTH ROUTES ----------------------
+
+// Signup route
+app.post('/api/signup', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const pool = await sql.connect(config);
+
+    // Check if username exists
+    const existing = await pool.request()
+      .input('username', sql.NVarChar, username)
+      .query('SELECT * FROM Users WHERE Username = @username');
+
+    if (existing.recordset.length > 0) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+
+    await pool.request()
+      .input('username', sql.NVarChar, username)
+      .input('passwordHash', sql.NVarChar, hash)
+      .query('INSERT INTO Users (Username, PasswordHash) VALUES (@username, @passwordHash)');
+
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Login route
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const pool = await sql.connect(config);
+
+    const result = await pool.request()
+      .input('username', sql.NVarChar, username)
+      .query('SELECT * FROM Users WHERE Username = @username');
+
+    const user = result.recordset[0];
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const match = await bcrypt.compare(password, user.PasswordHash);
+    if (!match) return res.status(400).json({ message: 'Invalid credentials' });
+
+    // Generate JWT token (expires in 1 hour)
+    const token = jwt.sign({ userId: user.Id, username: user.Username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.json({ token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Middleware to protect routes
+export const authenticate = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
+// Example protected route
+app.get('/api/profile', authenticate, (req, res) => {
+  res.json({ message: `Welcome ${req.user.username}` });
+});
 
 // Health check
 app.get('/api/health', (req, res) => res.send('Backend running'));

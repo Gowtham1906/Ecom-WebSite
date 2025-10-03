@@ -59,7 +59,7 @@ function App() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>🛍 Simple E-Commerce Store</h1>
+      <h1>🛍 Welcome to E-Commerce Store</h1>
       <ProductList products={products} addToCart={addToCart} />
       <Cart
         cart={cart}
