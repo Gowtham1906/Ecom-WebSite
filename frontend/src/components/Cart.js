@@ -15,19 +15,33 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
         <p>No items in cart.</p>
       ) : (
         <>
-          <ul>
+          <ul style={{ listStyleType: "none", padding: 0 }}>
             {cart.map((item) => (
               <li key={item.Id} style={{ marginBottom: "5px" }}>
-                {item.Name} - ₹{Number(item.Price).toLocaleString()} × {item.quantity} = ₹
-                {(item.Price * item.quantity).toLocaleString()}
+                <span>
+                  {item.Name} - ₹{Number(item.Price).toLocaleString()} × {item.quantity} = ₹
+                  {(item.Price * item.quantity).toLocaleString()}
+                </span>
                 <button
-                  style={{ marginLeft: "10px" }}
+                  style={{
+                    marginLeft: "10px",
+                    padding: "2px 6px",
+                    cursor: "pointer",
+                    border: "1px solid #333",
+                    backgroundColor: "#f0f0f0",
+                  }}
                   onClick={() => addToCart(item)}
                 >
                   ➕
                 </button>
                 <button
-                  style={{ marginLeft: "5px" }}
+                  style={{
+                    marginLeft: "5px",
+                    padding: "2px 6px",
+                    cursor: "pointer",
+                    border: "1px solid #333",
+                    backgroundColor: "#f0f0f0",
+                  }}
                   onClick={() => removeFromCart(item)}
                 >
                   ➖
