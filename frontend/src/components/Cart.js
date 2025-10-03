@@ -1,22 +1,25 @@
+// frontend/src/components/Cart.js
 import React from "react";
 
 function Cart({ cart }) {
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  // Calculate total price
+  const total = cart.reduce((sum, item) => sum + (item.Price || 0), 0);
+
   return (
-    <div style={{ marginTop: "20px" }}>
+    <div>
       <h2>Cart</h2>
       {cart.length === 0 ? (
         <p>No items in cart.</p>
       ) : (
-        <>
-          <ul>
-            {cart.map((item, index) => (
-              <li key={index}>{item.name} - ₹{item.price}</li>
-            ))}
-          </ul>
-          <h3>Total: ₹{total}</h3>
-        </>
+        <ul>
+          {cart.map((item, idx) => (
+            <li key={idx}>
+              {item.Name} - ₹{item.Price}
+            </li>
+          ))}
+        </ul>
       )}
+      <h3>Total: ₹{total}</h3>
     </div>
   );
 }
