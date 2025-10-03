@@ -30,6 +30,6 @@ steps:
 
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: 'ecom app'  # You'll set this up in next step
-    appName: 'ecom app'             # Your Azure App Service name
+    azureSubscription: 'DevOps-SP'  # You'll set this up in next step
+    appName: 'ecomwebapp'             # Your Azure App Service name
     package: '$(Build.ArtifactStagingDirectory)/backend.zip'
