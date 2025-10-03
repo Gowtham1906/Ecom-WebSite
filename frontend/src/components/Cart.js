@@ -1,6 +1,8 @@
+// frontend/src/components/Cart.js
 import React from "react";
 
 function Cart({ cart, addToCart, removeFromCart, clearCart }) {
+  // Calculate total dynamically
   const total = cart.reduce(
     (sum, item) => sum + (item.Price || 0) * item.quantity,
     0
@@ -16,8 +18,8 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
           <ul>
             {cart.map((item) => (
               <li key={item.Id} style={{ marginBottom: "5px" }}>
-                {item.Name} - ₹{item.Price} × {item.quantity} = ₹
-                {item.Price * item.quantity}
+                {item.Name} - ₹{Number(item.Price).toLocaleString()} × {item.quantity} = ₹
+                {(item.Price * item.quantity).toLocaleString()}
                 <button
                   style={{ marginLeft: "10px" }}
                   onClick={() => addToCart(item)}
@@ -33,7 +35,7 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
               </li>
             ))}
           </ul>
-          <h3>Total: ₹{total}</h3>
+          <h3>Total: ₹{total.toLocaleString()}</h3>
           <button
             style={{
               marginTop: "10px",

@@ -7,24 +7,39 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Database config
+// --- Database configuration ---
 const config = {
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   server: process.env.DB_SERVER, // e.g. "ecomserver123.database.windows.net"
   database: process.env.DB_NAME,
-  options: { encrypt: true } // required for Azure
+  options: { encrypt: true } // required for Azure SQL
 };
 
-// --- API Routes ---
+// --- Authentication middleware ---
+export const authenticate = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.sendStatus(401);
 
-// -------------------- AUTH ROUTES ----------------------
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
+// --- Routes ---
+
+// Health check
+app.get('/api/health', (req, res) => res.send('Backend running'));
 
 // Signup route
 app.post('/api/signup', async (req, res) => {
@@ -55,7 +70,7 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-// Login route
+// Login
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -71,8 +86,11 @@ app.post('/api/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.PasswordHash);
     if (!match) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Generate JWT token (expires in 1 hour)
-    const token = jwt.sign({ userId: user.Id, username: user.Username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { userId: user.Id, username: user.Username },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     res.json({ token });
   } catch (err) {
@@ -81,26 +99,10 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Middleware to protect routes
-export const authenticate = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-};
-
 // Example protected route
 app.get('/api/profile', authenticate, (req, res) => {
   res.json({ message: `Welcome ${req.user.username}` });
 });
-
-// Health check
-app.get('/api/health', (req, res) => res.send('Backend running'));
 
 // Get products
 app.get('/api/products', async (req, res) => {
@@ -115,15 +117,14 @@ app.get('/api/products', async (req, res) => {
 });
 
 // --- Serve React frontend ---
-
-// ES module __dirname fix
+// Fix __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve static files from React build
+// Serve static files from frontend build
 app.use(express.static(path.join(__dirname, 'build')));
 
-// Send all other requests to React index.html
+// All other requests return React index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });

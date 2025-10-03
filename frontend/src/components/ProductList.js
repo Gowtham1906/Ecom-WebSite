@@ -1,16 +1,21 @@
+// frontend/src/components/ProductList.js
 import React from "react";
 
 function ProductList({ products, addToCart }) {
+  if (!products || products.length === 0) {
+    return <p>No products available.</p>;
+  }
+
   return (
-    <div>
+    <div style={{ marginBottom: "20px" }}>
       <h2>Products</h2>
       <ul>
-        {products.map((p) => (
-          <li key={p.Id} style={{ marginBottom: "10px" }}>
-            {p.Name} - ₹{p.Price}
+        {products.map((product) => (
+          <li key={product.Id} style={{ marginBottom: "10px" }}>
+            {product.Name} - ₹{Number(product.Price).toLocaleString()}
             <button
               style={{ marginLeft: "10px" }}
-              onClick={() => addToCart(p)}
+              onClick={() => addToCart(product)}
             >
               Add to Cart
             </button>
