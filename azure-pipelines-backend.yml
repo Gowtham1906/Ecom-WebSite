@@ -1,22 +1,25 @@
 trigger:
   branches:
     include:
-      - main  # or your branch name
+      - master  # or your branch name
 
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+# 1) Install Node
 - task: NodeTool@0
   inputs:
     versionSpec: '18.x'
-  displayName: Install Node
+  displayName: 'Install Node'
 
+# 2) Install backend dependencies
 - script: |
     cd backend
     npm install
   displayName: 'Install backend dependencies'
 
+# 3) Zip the backend code dynamically for deployment
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: 'backend'
@@ -24,12 +27,17 @@ steps:
     archiveType: 'zip'
     archiveFile: '$(Build.ArtifactStagingDirectory)/backend.zip'
     replaceExistingArchive: true
+  displayName: 'Archive backend folder'
 
+# 4) (Optional) Publish artifact in pipeline UI
 - publish: '$(Build.ArtifactStagingDirectory)/backend.zip'
   artifact: drop
 
+# 5) Deploy to Azure Web App
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: 'Azure-SC'  # You'll set this up in next step
-    appName: 'ecomwebapp'             # Your Azure App Service name
+    azureSubscription: 'Azure-SC'  # Your service connection name in DevOps
+    appName: 'ecomwebapp'           # Your Azure Web App name
     package: '$(Build.ArtifactStagingDirectory)/backend.zip'
+    deploymentMethod: 'zipDeploy'
+  displayName: 'Deploy backend to Azure Web App'
