@@ -1,31 +1,32 @@
-import express from "express";
-import cors from "cors";
-import fs from "fs";
-
+// backend/server.js
+const express = require('express');
+const cors = require('cors');
+const sql = require('mssql');
+require('dotenv').config();
 const app = express();
-const PORT = 5000;
-
 app.use(cors());
 app.use(express.json());
 
-// Load products from JSON
-const products = JSON.parse(fs.readFileSync("./data/products.json"));
+const config = {
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  server: process.env.DB_SERVER, // e.g. "ecomserver123.database.windows.net"
+  database: process.env.DB_NAME,
+  options: { encrypt: true } // required for Azure
+};
 
-// Routes
-app.get("/", (req, res) => {
-  res.send("E-Commerce Backend Running 🚀");
+app.get('/', (req, res) => res.send('Ecom backend running'));
+
+app.get('/api/products', async (req, res) => {
+  try {
+    const pool = await sql.connect(config);
+    const result = await pool.request().query('SELECT * FROM Products');
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('DB error', err);
+    res.status(500).json({ error: 'Error fetching products' });
+  }
 });
 
-app.get("/api/products", (req, res) => {
-  res.json(products);
-});
-
-app.post("/api/checkout", (req, res) => {
-  const { cart } = req.body;
-  res.json({ message: "Order placed successfully!", cart });
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
