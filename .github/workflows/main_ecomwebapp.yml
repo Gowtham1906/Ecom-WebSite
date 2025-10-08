@@ -25,20 +25,20 @@ jobs:
         with:
           node-version: '20.x'
 
-      # Install dependencies, build, and test (in frontend folder)
+      # Install dependencies, build, and test (in correct subfolder)
       - name: npm install, build, and test
         run: |
           npm install
           npm run build --if-present
           npm run test --if-present
-        working-directory: ./frontend
+        working-directory: ./Ecom-WebSite  # <-- folder with package.json
 
       # Upload artifact for deployment
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./frontend/build
+          path: ./Ecom-WebSite/build  # <-- built folder
 
   deploy:
     runs-on: ubuntu-latest
@@ -58,5 +58,5 @@ jobs:
         with:
           app-name: 'ecomwebapp'
           slot-name: 'Production'
-          package: ./build  # the artifact folder downloaded from build job
+          package: ./build  # <-- downloaded artifact folder
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_22E4E2995F10465FBE9A903791FB987F }}
